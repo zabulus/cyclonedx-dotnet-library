@@ -198,6 +198,14 @@ namespace CycloneDX.Spdx.Interop.Helpers
                     component.Properties.AddSpdxElement(PropertyTaxonomy.HOMEPAGE, package.Homepage);
                 }
 
+                var purlExternalRef = package.ExternalRefs.FirstOrDefault(x =>
+                    x.ReferenceCategory == ExternalRefCategory.PACKAGE_MANAGER && x.ReferenceType == "purl"
+                );
+                if (purlExternalRef != null)
+                {
+                    component.Purl = purlExternalRef.ReferenceLocator;
+                }
+
                 //TODO HasFile
 
                 bom.Components.Add(component);
