@@ -17,6 +17,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using CycloneDX.Models;
 using CycloneDX.Spdx.Models.v2_2;
 using CycloneDX.Spdx.Interop.Helpers;
@@ -120,6 +121,32 @@ namespace CycloneDX.Spdx.Interop
 
             bom.AddSpdxPackages(doc);
             bom.AddSpdxFiles(doc.Files);
+
+            // Specify root component described in spdx
+            if (bom.Metadata.Component == null && doc.DocumentDescribes.Count != 0)
+            {
+                List<Component> rootComponentCandidates = new List<Component>();
+                foreach (var component in bom.Components)
+                {
+                    var idProperty = component.Properties.FirstOrDefault(x => x.Name == "spdx:spdxid");
+                    if (idProperty == null)
+                    {
+                        continue;
+                    }
+
+                    if (doc.DocumentDescribes.Contains(idProperty.Value))
+                    {
+                        rootComponentCandidates.Add(component);
+                    }
+                }
+
+                if (rootComponentCandidates.Count == 1)
+                {
+                    var component = rootComponentCandidates.Single();
+                    bom.Components.Remove(component);
+                    bom.Metadata.Component = component;
+                }
+            }
 
             return bom;
         }
